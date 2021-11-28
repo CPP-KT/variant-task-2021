@@ -18,6 +18,9 @@ if [ -n "$(git status --untracked-files=no --porcelain)" ]; then
     exit 1
 fi
 
+git remote add upstream git@github.com:CPP-KT/variant-task-2021.git || true
+# ignore error code in case of a hand-added remote
+
 git fetch upstream
 git branch feedback upstream/master
 git push -u origin feedback:feedback
