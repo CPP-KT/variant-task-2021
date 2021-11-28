@@ -1,6 +1,9 @@
 #pragma once
 
-#include "gtest/gtest.h"
+#include <cassert>
+#include <cstddef>
+#include <exception>
+#include <string>
 
 template <class... Ts>
 struct overload : Ts... {
@@ -9,7 +12,7 @@ struct overload : Ts... {
 template <class... Ts>
 overload(Ts...) -> overload<Ts...>;
 
-struct dummy_t {};
+struct trivial_t {};
 
 struct no_default_t {
   no_default_t() = delete;
@@ -22,19 +25,15 @@ struct throwing_default_t {
 };
 
 struct throwing_move_operator_t {
-  static size_t swap_called;
+  static size_t swap_called; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
   throwing_move_operator_t() = default;
-  throwing_move_operator_t(throwing_move_operator_t&&) noexcept(false) {
+  throwing_move_operator_t(throwing_move_operator_t&&) noexcept(false) { // NOLINT(bugprone-exception-escape)
     throw std::exception();
   }
   throwing_move_operator_t& operator=(throwing_move_operator_t&&) = default;
 };
 
-inline size_t throwing_move_operator_t::swap_called = 0;
-
-void swap(throwing_move_operator_t&, throwing_move_operator_t&) {
-  throwing_move_operator_t::swap_called += 1;
-}
+void swap(throwing_move_operator_t&, throwing_move_operator_t&);
 
 struct no_copy_t {
   no_copy_t(const no_copy_t&) = delete;
@@ -46,18 +45,18 @@ struct no_move_t {
 
 struct non_trivial_copy_t {
   explicit non_trivial_copy_t(int x) noexcept : x{x} {}
-  non_trivial_copy_t(const non_trivial_copy_t& other) noexcept
-      : x{other.x + 1} {}
+  non_trivial_copy_t(const non_trivial_copy_t& other) noexcept : x{other.x + 1} {}
 
   int x;
 };
 
 struct non_trivial_copy_assignment_t {
+  static constexpr int DELTA = 5;
+
   explicit non_trivial_copy_assignment_t(int x) noexcept : x{x} {}
-  non_trivial_copy_assignment_t&
-  operator=(const non_trivial_copy_assignment_t& other) {
+  non_trivial_copy_assignment_t& operator=(const non_trivial_copy_assignment_t& other) {
     if (this != &other) {
-      x = other.x + 5;
+      x = other.x + DELTA;
     }
     return *this;
   };
@@ -66,39 +65,33 @@ struct non_trivial_copy_assignment_t {
 };
 
 struct non_trivial_int_wrapper_t {
-  non_trivial_int_wrapper_t(int x) : x{x} {}
+  non_trivial_int_wrapper_t(int x) : x{x} {} // NOLINT(google-explicit-constructor)
   non_trivial_int_wrapper_t& operator=(int i) {
     x = i + 1;
     return *this;
   }
-  friend constexpr bool
-  operator==(non_trivial_int_wrapper_t const& lhs,
-             non_trivial_int_wrapper_t const& rhs) noexcept {
+  friend constexpr bool operator==(non_trivial_int_wrapper_t const& lhs,
+                                   non_trivial_int_wrapper_t const& rhs) noexcept {
     return lhs.x == rhs.x;
   }
-  friend constexpr bool
-  operator!=(non_trivial_int_wrapper_t const& lhs,
-             non_trivial_int_wrapper_t const& rhs) noexcept {
+  friend constexpr bool operator!=(non_trivial_int_wrapper_t const& lhs,
+                                   non_trivial_int_wrapper_t const& rhs) noexcept {
     return lhs.x != rhs.x;
   }
-  friend constexpr bool
-  operator<(non_trivial_int_wrapper_t const& lhs,
-            non_trivial_int_wrapper_t const& rhs) noexcept {
+  friend constexpr bool operator<(non_trivial_int_wrapper_t const& lhs,
+                                  non_trivial_int_wrapper_t const& rhs) noexcept {
     return lhs.x < rhs.x;
   }
-  friend constexpr bool
-  operator<=(non_trivial_int_wrapper_t const& lhs,
-             non_trivial_int_wrapper_t const& rhs) noexcept {
+  friend constexpr bool operator<=(non_trivial_int_wrapper_t const& lhs,
+                                   non_trivial_int_wrapper_t const& rhs) noexcept {
     return lhs.x <= rhs.x;
   }
-  friend constexpr bool
-  operator>(non_trivial_int_wrapper_t const& lhs,
-            non_trivial_int_wrapper_t const& rhs) noexcept {
+  friend constexpr bool operator>(non_trivial_int_wrapper_t const& lhs,
+                                  non_trivial_int_wrapper_t const& rhs) noexcept {
     return lhs.x > rhs.x;
   }
-  friend constexpr bool
-  operator>=(non_trivial_int_wrapper_t const& lhs,
-             non_trivial_int_wrapper_t const& rhs) noexcept {
+  friend constexpr bool operator>=(non_trivial_int_wrapper_t const& lhs,
+                                   non_trivial_int_wrapper_t const& rhs) noexcept {
     return lhs.x >= rhs.x;
   }
   int x;
@@ -115,22 +108,13 @@ struct no_copy_assignment_t {
 struct throwing_move_assignment_t {
   throwing_move_assignment_t(throwing_move_assignment_t&&) = default;
   throwing_move_assignment_t&
-  operator=(throwing_move_assignment_t&&) noexcept(false) {
-    throw std::exception();
-  }
-};
-
-struct throwing_copy_operator_t {
-  throwing_copy_operator_t() = default;
-  throwing_copy_operator_t(throwing_copy_operator_t const&) = default;
-  throwing_copy_operator_t&
-  operator=(throwing_copy_operator_t const&) noexcept(false) {
+  operator=(throwing_move_assignment_t&&) noexcept(false) { // NOLINT(bugprone-exception-escape)
     throw std::exception();
   }
 };
 
 struct only_movable {
-  static inline size_t move_assignment_called = 0;
+  static size_t move_assignment_called; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
   constexpr only_movable() = default;
 
@@ -142,8 +126,8 @@ struct only_movable {
 
   constexpr only_movable& operator=(only_movable&& other) noexcept {
     if (this != &other) {
-      move_assignment_called += 1;
       assert(other.coin && "Move of moved value?");
+      move_assignment_called += 1;
       coin = true;
       other.coin = false;
     }
@@ -162,8 +146,8 @@ private:
 };
 
 struct yac_coin {
-  constexpr operator int() noexcept {
-    return 42;
+  constexpr operator int() noexcept { // NOLINT(google-explicit-constructor)
+    return 42;                        // NOLINT(cppcoreguidelines-avoid-magic-numbers)
   }
 };
 
@@ -189,10 +173,9 @@ struct coin_wrapper {
     return coin;
   }
 
-  constexpr explicit coin_wrapper(yac_coin) noexcept : coin{17} {}
+  constexpr explicit coin_wrapper(yac_coin) noexcept : coin{17} {} // NOLINT(cppcoreguidelines-avoid-magic-numbers)
 
-  constexpr coin_wrapper(coin_wrapper const& other) noexcept
-      : coin(other.coin + 1) {}
+  constexpr coin_wrapper(coin_wrapper const& other) noexcept : coin(other.coin + 1) {}
 
   constexpr coin_wrapper& operator=(coin_wrapper const& other) noexcept {
     if (this != &other) {
@@ -232,33 +215,21 @@ struct strange_visitor {
 };
 
 struct broken_address {
-  broken_address() : x(123){};
-  broken_address(broken_address const& other) : x(other.x){};
-  broken_address(broken_address&& other) : x(other.x){};
-  broken_address& operator=(broken_address const& other) {
-    x = other.x;
-    return *this;
-  };
-  broken_address& operator=(broken_address&& other) {
-    x = other.x;
-    return *this;
-  };
-
-  broken_address* operator&() {
+  broken_address* operator&() { // NOLINT(google-runtime-operator)
     return nullptr;
   }
-  broken_address const* operator&() const {
+  broken_address const* operator&() const { // NOLINT(google-runtime-operator)
     return nullptr;
   }
-  int x;
+  int x{123}; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
 };
 
 struct empty_comparable {
   empty_comparable() = default;
-  empty_comparable(empty_comparable&&) {
+  empty_comparable(empty_comparable&&) { // NOLINT(bugprone-exception-escape)
     throw std::exception();
   }
-  empty_comparable& operator=(empty_comparable&&) {
+  empty_comparable& operator=(empty_comparable&&) { // NOLINT(bugprone-exception-escape)
     throw std::exception();
   }
   bool operator==(const empty_comparable&) const {
