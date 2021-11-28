@@ -8,19 +8,6 @@
 #include "variant.h"
 #include "gtest/gtest.h"
 
-#include <variant>
-using std::bad_variant_access;
-using std::in_place_index;
-using std::in_place_index_t;
-using std::in_place_type;
-using std::in_place_type_t;
-using std::variant;
-using std::variant_alternative;
-using std::variant_alternative_t;
-using std::variant_npos;
-using std::variant_size;
-using std::variant_size_v;
-
 TEST(traits, destructor) {
   using variant1 = variant<int, double, trivial_t>;
   using variant2 = variant<int, std::string>;
@@ -545,8 +532,7 @@ TEST(visits, visit_on_multiple) {
 
 TEST(visits, visit_overload) {
   variant<char const*> v = "abce";
-  auto visitor =
-      overload{[](const std::string&) -> bool { return false; }, [](bool) -> bool { return true; }};
+  auto visitor = overload{[](const std::string&) -> bool { return false; }, [](bool) -> bool { return true; }};
   ASSERT_TRUE(visit(visitor, v));
 }
 
