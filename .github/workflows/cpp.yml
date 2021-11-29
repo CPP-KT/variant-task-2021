@@ -8,6 +8,8 @@ jobs:
     name: Tests in ${{ matrix.build_type }} with ${{ matrix.compiler }} 
     runs-on: ubuntu-20.04
     container: ubuntu:21.04
+    env:
+      DEBIAN_FRONTEND: noninteractive
     strategy:
       matrix:
         build_type: [Release, Debug, RelWithDebInfo]
