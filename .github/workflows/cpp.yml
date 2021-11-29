@@ -17,7 +17,11 @@ jobs:
 
     steps:
     - name: dependencies
-      run: apt update && apt install -y git binutils gcc clang cmake valgrind && g++ --version && clang++ --version
+      run: |
+        apt-get update
+        apt-get install -y git build-essential binutils gcc clang cmake valgrind
+        g++ --version
+        clang++ --version
       
     - uses: actions/checkout@v2
 
