@@ -19,7 +19,7 @@ jobs:
     - name: dependencies
       run: |
         apt-get update
-        apt-get install -y git build-essential binutils gcc clang cmake valgrind libc++-dev libc++abi-dev libclang-dev
+        apt-get install -y git build-essential binutils gcc clang cmake valgrind libc++-dev libc++abi-dev clang-tools
         g++ --version
         clang++ --version
       
