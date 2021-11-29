@@ -1,13 +1,12 @@
 #include <exception>
-#include <optional>
 #include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "gtest/gtest.h"
 #include "test-classes.h"
 #include "variant.h"
-#include "gtest/gtest.h"
 
 TEST(traits, destructor) {
   using variant1 = variant<int, double, trivial_t>;
