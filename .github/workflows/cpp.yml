@@ -24,7 +24,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Build main
-      run: CXX=${{ matrix.compiler }} ci-extra/build.sh ${{ matrix.build_type }}
+      run: CXX=${{ matrix.compiler }} ci-extra/build.sh ${{ matrix.build_type }} && readelf -d cmake-build-${{ matrix.build_type }}/tests
 
     - name: Test main
       run: ci-extra/test.sh ${{ matrix.build_type }}
