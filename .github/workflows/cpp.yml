@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: dependencies
-      run: apt update && apt install binutils gcc clang cmake valgrind && g++ --version
+      run: apt update && apt install -y git binutils gcc clang cmake valgrind && g++ --version && clang++ --version
 
     - name: Build main
       run: CXX=${{ matrix.compiler }} ci-extra/build.sh ${{ matrix.build_type }}
