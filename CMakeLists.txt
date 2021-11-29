@@ -36,4 +36,4 @@ elseif (NOT MSVC)
 endif()
 
 add_executable(tests tests.cpp test-classes.cpp)
-target_link_libraries(tests gtest_main)
+target_link_libraries(tests gcc_s gtest_main)
